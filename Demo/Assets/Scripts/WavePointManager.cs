@@ -2,25 +2,26 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class WavePointManager {
+public class WavePointManager : MonoBehaviour {
 
 	public WavePoint start = null;
 	public WavePoint end = null;
 
+
 	private List<WavePoint> nodes = new List<WavePoint>();
 
-	public void Start() {
-/*		if (!instance) {
-			instance = this;
-		} else {
+	public void Awake() {
+		if (instance) {
 			GameObject.Destroy(gameObject);
-		}*/
+		} else {
+			instance = this;
+		}
 	}
 
 	private static WavePointManager instance = null;
 	private static WavePointManager get() {
 		if (instance == null) {
-			instance = new WavePointManager();
+			instance = GameObject.Find("WavePointManager").GetComponent<WavePointManager>();
 		}
 
 		return instance;
@@ -31,7 +32,7 @@ public class WavePointManager {
 			get().nodes.Add(node);
 		}
 	}
-	
+
 	public static WavePoint getStart() {
 		return get().start;
 	}
@@ -40,7 +41,7 @@ public class WavePointManager {
 		get().start = node;
 	}
 
-	public static void refershMiddle(WavePoint rhs) {
+	public static void refreshMiddle(WavePoint rhs) {
 
 		foreach(var lhs in get().nodes) {
 			if(lhs != rhs) {
@@ -59,7 +60,7 @@ public class WavePointManager {
 		}
 	}
 
-	public static WavePoint getEnd(WavePoint node) {
+	public static WavePoint getEnd() {
 		return get().end;
 	}
 

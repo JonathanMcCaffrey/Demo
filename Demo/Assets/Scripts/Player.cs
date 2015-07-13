@@ -2,11 +2,17 @@
 using System.Collections;
 
 
-public class Player : MonoBehaviour {
+[System.Serializable]
+public class Boundary 
+{
+	public float xMin, xMax, yMin, yMax;
+}
 
+public class Player : MonoBehaviour {
+	
 	public float speed;
 	public float tilt;
-	public Done_Boundary boundary;
+	public Boundary boundary;
 	
 	public GameObject shot;
 	public Transform shotSpawn;
@@ -20,7 +26,7 @@ public class Player : MonoBehaviour {
 		{
 			nextFire = Time.time + fireRate;
 			Instantiate(shot, shotSpawn.position, shotSpawn.rotation);
-			GetComponent<AudioSource>().Play ();
+			//	GetComponent<AudioSource>().Play ();
 		}
 	}
 	
@@ -28,17 +34,27 @@ public class Player : MonoBehaviour {
 	{
 		float moveHorizontal = Input.GetAxis ("Horizontal");
 		float moveVertical = Input.GetAxis ("Vertical");
+
+		Vector2 movement = new Vector2 (moveHorizontal, moveVertical);
 		
-		Vector3 movement = new Vector3 (moveHorizontal, 0.0f, moveVertical);
-		GetComponent<Rigidbody>().velocity = movement * speed;
+		Vector2 velocity = movement * speed;
 		
-		GetComponent<Rigidbody>().position = new Vector3
-			(
-				Mathf.Clamp (GetComponent<Rigidbody>().position.x, boundary.xMin, boundary.xMax), 
-				0.0f, 
-				Mathf.Clamp (GetComponent<Rigidbody>().position.z, boundary.zMin, boundary.zMax)
-				);
+		GetComponent<Rigidbody2D>().velocity = velocity;
 		
-		GetComponent<Rigidbody>().rotation = Quaternion.Euler (0.0f, 0.0f, GetComponent<Rigidbody>().velocity.x * -tilt);
+		
+		GetComponent<Rigidbody2D>().position = new Vector2 (
+			Mathf.Clamp (GetComponent<Rigidbody2D>().position.x, boundary.xMin, boundary.xMax), 
+			Mathf.Clamp (GetComponent<Rigidbody2D>().position.y, boundary.yMin, boundary.yMax)
+			);
+		
+		if (Mathf.Sqrt (velocity.x * velocity.x) >= 0.6f || Mathf.Sqrt (velocity.y * velocity.y) >= 0.6f) {
+			float direction = Mathf.Atan2 (velocity.y, velocity.x) * Mathf.Rad2Deg;
+			GetComponent<Rigidbody2D> ().rotation = direction - 90;
+		} else {
+			float clampRotation = GetComponent<Rigidbody2D> ().rotation / 45.0f;
+			GetComponent<Rigidbody2D> ().rotation = ((Mathf.Round(clampRotation) * 45.0f 
+			                                         + GetComponent<Rigidbody2D> ().rotation) / 2.0f);
+		}
 	}
 }
+

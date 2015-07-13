@@ -1,15 +1,43 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class EnemyManager : MonoBehaviour {
+	public List<Enemy> enemies = new List<Enemy>();
 
-	// Use this for initialization
-	void Start () {
-	
+	public GameObject enemy = null;
+
+	public float maxNumber = 20;
+	public float spawnRate = 1;
+
+	private static EnemyManager instance = null;
+	void Awake() {
+		if (instance) {
+			GameObject.Destroy (this);
+		} else { 
+			instance = this;
+		}
 	}
-	
-	// Update is called once per frame
+
+	public static EnemyManager get() {
+		return instance;
+	}
+
+	private float currentSpawnTime = 0;
 	void Update () {
-	
+		
+		currentSpawnTime -= Time.deltaTime;
+
+		if (currentSpawnTime < 0) {
+			currentSpawnTime = spawnRate;
+
+			var createdEnemy = GameObject.Instantiate(enemy);
+
+
+			createdEnemy.GetComponent<Angle>().setDegreeValue(Random.Range(0, 360));
+			var direction = createdEnemy.GetComponent<Angle>().getDirection();
+			createdEnemy.transform.position = new Vector3(direction.x * 6, direction.y * 6, 0);
+		}
+
 	}
 }

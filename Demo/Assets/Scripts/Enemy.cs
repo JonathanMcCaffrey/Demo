@@ -3,52 +3,75 @@ using System.Collections;
 
 public class Enemy : MonoBehaviour {
 		
-
-	float speed = 4;
+	private Angle angle;
+	private float speed = 4;
 
 	void Start () {
-		direction = Random.Range (0, 360);
-
+		angle = GetComponent<Angle> ();
 		speed = Random.Range (4, 12);
+
+		EnemyManager.get().enemies.Add (this);
+	}
+
+	void OnDestroy() {
+		EnemyManager.get ().enemies.Remove (this);
+	}
+
+	float areaRadius = 22;
+	float totalDistance = 0;
+
+	void OnTriggerEnter2D(Collider2D other) {
+
+
+		if (other.tag != "Wavepoint") {
+			return;
+		}
+
+		WavePoint point = other.GetComponent<WavePoint> ();
+
+		if (point.next == null) {
+			GameObject.Destroy(gameObject);
+			return;
+		}
+
+		//if (point.getAngle ().IsWithin (angle.getDegreeValue(), 90)) {
+
+			angle.setDegreeValue(point.getAngle().getDegreeValue());
+		//}
 	}
 	
-	float areaRadius = 18;
-
-	float direction = 0;
-	
-	float totalDistance = 0;
 	
 	bool UpdateEnemyLimits () {
 		bool wasFlipped = false;
 		
 		float xsqr = gameObject.transform.position.x * gameObject.transform.position.x;
-		float zsqr = gameObject.transform.position.z * gameObject.transform.position.z;
-		float hyp = Mathf.Sqrt (xsqr + zsqr);
+		float ysqr = gameObject.transform.position.y * gameObject.transform.position.y;
+		float hyp = Mathf.Sqrt (xsqr + ysqr);
 		if (hyp > areaRadius) {
 			gameObject.transform.position = previousPosition;
 			
-			gameObject.transform.position = new Vector3 (-gameObject.transform.position.x, gameObject.transform.position.y, -gameObject.transform.position.z);
+			gameObject.transform.position = new Vector3 (-gameObject.transform.position.x, -gameObject.transform.position.y, gameObject.transform.position.z);
 			
-			
-			direction = Mathf.Atan2(gameObject.transform.position.z, gameObject.transform.position.x) * Mathf.Rad2Deg + 180;
-			
-			direction += Random.Range(-10,10);
+			Vector2 direction = new Vector2(gameObject.transform.position.x, gameObject.transform.position.y);
+			direction = direction.normalized;
+
+			angle.setDegreeValue(Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 180);
+			angle.setDegreeValue(angle.getDegreeValue() + Random.Range(-10,10));
 			
 			wasFlipped = true;
 		}
-		
-		direction = Mathf.RoundToInt(direction);
-		direction = direction % 360;
-		
+
 		return wasFlipped;
 	}
 
 	void UpdateEnemyMovement () {
-		float x = Mathf.Cos (direction) * Time.deltaTime * speed;
-		float z = Mathf.Sin (direction) * Time.deltaTime * speed;
+
+
+		float y = angle.getDirection ().y * Time.deltaTime * speed;
+		float x = angle.getDirection ().x * Time.deltaTime * speed;
 		float fixedX = x + gameObject.transform.position.x;
-		float fixedZ = z + gameObject.transform.position.z;
-		gameObject.transform.position = new Vector3 (fixedX, gameObject.transform.position.y, fixedZ);
+		float fixedY = y + gameObject.transform.position.y;
+		gameObject.transform.position = new Vector3 (fixedX, fixedY, gameObject.transform.position.z);
 	}
 	
 	bool wasRecentlyFlipped = false;
@@ -77,12 +100,17 @@ public class Enemy : MonoBehaviour {
 	}
 	
 	void OnDrawGizmos() {
+		if (angle == null) {
+			return;
+		}
+
+
 		Gizmos.color = Color.red;
 
-		float x = Mathf.Cos (direction) * 2;
-		float z = Mathf.Sin (direction) * 2;
+		float y = angle.getDirection ().y;
+		float x = angle.getDirection ().x;
 
-		Vector3 vec = new Vector3(transform.position.x + x, transform.position.y, transform.position.z + z);
+		Vector3 vec = new Vector3(transform.position.x + x, transform.position.y + y, transform.position.z);
 
 		Gizmos.DrawLine(transform.position, vec);
 
@@ -90,12 +118,13 @@ public class Enemy : MonoBehaviour {
 	}
 
 	void Refresh() {
-		float x = Mathf.Cos (direction) * 2;
-		float z = Mathf.Sin (direction) * 2;
+		float y = angle.getDirection ().y;
+		float x = angle.getDirection ().x;
 		
-		Vector3 vec = new Vector3(transform.position.x + x, transform.position.y, transform.position.z + z);
+		Vector3 vec = new Vector3(transform.position.x + x, transform.position.y + y, transform.position.z);
 		
 		gameObject.transform.LookAt (vec);
+
 
 	}
 }

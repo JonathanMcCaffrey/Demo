@@ -8,6 +8,7 @@ public class ScoreManager : MonoBehaviour {
 
 	private int currentScore = 0;
 	public int scoreMax = 2500;
+	public int nextLevel = 1;
 
 	private static ScoreManager instance = null;
 	private static ScoreManager get() { return instance; }
@@ -30,7 +31,8 @@ public class ScoreManager : MonoBehaviour {
 		get ().text.text = get ().currentScore.ToString ();
 
 		if (get ().currentScore > get ().scoreMax) {
-			Application.LoadLevel("1");
+
+			Application.LoadLevel(get().nextLevel);
 		}
 	}
 }
